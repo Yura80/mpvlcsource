@@ -244,7 +244,8 @@ HRESULT CMPVlcSourceStream::DoBufferProcessingLoop(void)
 	if (m_exec)
 	{
 		LogInfo("Executing external command: %s %s", m_exec, m_exec_opt);
-		::ShellExecuteA(0, NULL, m_exec, m_exec_opt, NULL, SW_HIDE);  
+		::ShellExecuteA(0, NULL, m_exec, m_exec_opt, NULL, SW_HIDE);
+		Sleep(m_exec_wait);
 	}
 
 	//libvlc_vlm_seek_media(m_vlc, "vlc_ds_stream", 0);
@@ -269,7 +270,9 @@ HRESULT CMPVlcSourceStream::DoBufferProcessingLoop(void)
 	if (!fConnected)
 	{
 		LogError("ConnectNamedPipe failed");
-		result = S_FALSE;
+		CancelIo(m_hPipe);
+		CloseHandle(o.hEvent);
+		return S_FALSE;	
 	}
 	else do 
 	{
@@ -389,7 +392,7 @@ HRESULT CMPVlcSourceStream::DoBufferProcessingLoop(void)
 		GetExitCodeThread(hSDThread, &ec);
 		TerminateThread(hSDThread, ec);
 	}
-	DisconnectNamedPipe(m_hPipe);
+	DisconnectNamedPipe(m_hPipe); 
 	LogDebug("DoBufferProcessingLoop end");
 	
 	CloseHandle(o.hEvent);
@@ -475,6 +478,8 @@ bool CMPVlcSourceStream::Load(const TCHAR* fn)
 			m_exec = m_options[nopt] + 5;
 		else if (strncmp(m_options[nopt], "exec-opt=", 9) == 0)
 			m_exec_opt = m_options[nopt] + 9;
+		else if (strncmp(m_options[nopt], "exec-wait=", 10) == 0)
+			m_exec_wait = atoi(m_options[nopt] + 10);
 		else if (strncmp(m_options[nopt], "no-remux", 8) == 0 && noremux == -1)
 			noremux = 1;
 		else

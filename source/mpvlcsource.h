@@ -61,6 +61,8 @@ protected:
 
 	BOOL m_debug;
 
+	int m_exec_wait;
+
 	TCHAR m_filterPath[MAX_PATH];
 	TCHAR m_inifile[MAX_PATH];
 
